@@ -1,6 +1,8 @@
 import React from "react";
 import styled from "styled-components";
 import { RenderInlineStyle } from "./inlineStyle";
+import { RenderBlockStyle } from "./blockStyle";
+import { RenderHeaderStyle } from "./headerStyle";
 
 const ToolbarContainer = styled.div`
   display: flex;
@@ -17,6 +19,14 @@ const Toolbar = ({ editorState, updateEditorState }) => {
   return (
     <ToolbarContainer>
       <RenderInlineStyle
+        editorState={editorState}
+        updateEditorState={updateEditorState}
+      />
+      <RenderBlockStyle
+        editorState={editorState}
+        updateEditorState={updateEditorState}
+      />
+      <RenderHeaderStyle
         editorState={editorState}
         updateEditorState={updateEditorState}
       />

@@ -1,41 +1,71 @@
 import React, { useState, useRef } from "react";
-import { EditorState, Editor as DraftEditor, RichUtils } from "draft-js";
-import styled from "styled-components";
+import {
+  EditorState,
+  Editor as DraftEditor,
+  RichUtils,
+  Modifier,
+} from "draft-js";
+import "draft-js/dist/Draft.css";
+import { convertToHTML, convertFromHTML } from "draft-convert";
+
+import { EditorWrapper, EditorContainer } from "../styledComponents";
 
 import Toolbar from "../toolbar/Toolbar";
 
-const EditorWrapper = styled.div`
-  min-width: 700px;
-  display: flex;
-  height: fit-content;
-  flex-direction: column;
-  margin-top: 3em;
-`;
+const RichTextEditor = ({ htmlValue = "" }) => {
+  const [editorState, setEditorState] = useState(
+    EditorState.createWithContent(convertFromHTML(htmlValue))
+  );
+  const [convertedContent, setConvertedContent] = useState();
 
-const EditorContainer = styled.div`
-  display: flex;
-  min-height: 9em;
-  border-radius: 0 0 3px 3px;
-  background-color: #fff;
-  padding: 5px;
-  font-size: 17px;
-  font-weight: 300;
-  box-shadow: 0px 0px 3px 1px rgba(15, 15, 15, 0.17);
-`;
-
-const RichTextEditor = () => {
-  const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const editor = useRef();
 
   function focusEditor() {
     editor.current.focus();
   }
 
+  function onChange(editorState) {
+    setEditorState(editorState);
+    exportHTML();
+  }
+
+  function exportHTML() {
+    setConvertedContent(convertToHTML(editorState.getCurrentContent()));
+  }
+
+  function onTab(e) {
+    e.preventDefault();
+    let currentState = editorState;
+
+    const selection = currentState.getSelection();
+    const blockType = currentState
+      .getCurrentContent()
+      .getBlockForKey(selection.getStartKey())
+      .getType();
+
+    if (
+      blockType === "unordered-list-item" ||
+      blockType === "ordered-list-item"
+    ) {
+      onChange(RichUtils.onTab(e, currentState, 3));
+    } else {
+      let newContentState = Modifier.replaceText(
+        currentState.getCurrentContent(),
+        currentState.getSelection(),
+        "    "
+      );
+
+      onChange(
+        EditorState.push(currentState, newContentState, "insert-characters")
+      );
+    }
+  }
+
   function handleKeyCommand(command, editorState) {
     const newState = RichUtils.handleKeyCommand(editorState, command);
 
     if (newState) {
-      this.onChange(newState);
+      onChange(newState);
       return "handled";
     }
 
@@ -43,20 +73,24 @@ const RichTextEditor = () => {
   }
 
   return (
-    <EditorWrapper>
-      <Toolbar editorState={editorState} updateEditorState={setEditorState} />
+    <>
+      <EditorWrapper>
+        <Toolbar editorState={editorState} updateEditorState={setEditorState} />
 
-      <EditorContainer onClick={focusEditor}>
-        <DraftEditor
-          ref={editor}
-          spellCheck={true}
-          editorState={editorState}
-          onChange={setEditorState}
-          handleKeyCommand={handleKeyCommand}
-          placeholder="Type here for placeholder..."
-        />
-      </EditorContainer>
-    </EditorWrapper>
+        <EditorContainer onClick={focusEditor}>
+          <DraftEditor
+            ref={editor}
+            onTab={onTab}
+            spellCheck={true}
+            editorState={editorState}
+            onChange={onChange}
+            handleKeyCommand={handleKeyCommand}
+          />
+        </EditorContainer>
+      </EditorWrapper>
+
+      <textarea value={convertedContent} />
+    </>
   );
 };
 

@@ -3,13 +3,26 @@ body,
 #root {
   height: 100%;
   width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 #root {
   display: flex;
-  justify-content: center;
+  width: auto;
+  margin: 0 auto;
+  justify-content: flex-start;
+}
+
+textarea {
+  margin-top: 20px;
+  height: 100px;
 }
 
 * {
   box-sizing: border-box;
+}
+
+.DraftEditor-root {
+  width: 100%;
 }
